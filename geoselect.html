@@ -1,0 +1,138 @@
+<html>
+	<head>
+		<title>Chained / Hierarchical Select</title>
+		<style>
+			form fieldset label {
+				display: inline-block;
+				width : 120px;
+			}
+			
+			form fieldset select {
+				width : 120px;
+			}
+		</style>
+		<script src="jquery/jquery-2.1.1.js"></script>
+		<script>
+			var geoXML;
+			
+			$.ajax({
+				url:"geo.xml",
+				async:false,
+				type: "GET",
+				datatype :"xml",
+				success: function (dataXML) {
+					//debugger;
+					geoXML = dataXML;
+				}
+			});
+			
+			// at this point geoXML should intatntiated with
+			// a XMLDocument with the loaded data
+			
+			// alert(geoXML);
+			
+			
+			$(document).ready(function () {
+				// init select fields
+				initSelect("#scontinent");
+				initSelect("#sregion");
+				initSelect("#scountry");
+				
+				// force continent to load
+				loadContinents();
+				
+				// attach event handles to select fields
+				
+				$("#scontinent").change(loadRegions);
+				$("#sregion").change(loadCountries);
+				
+				
+			});
+			
+			function initSelect(selector) {
+				$(selector).empty();
+				$(selector).append($("<option/>").attr("disabled","disabled").text("Loading..."));
+			}
+			
+			function loadContinents() {
+				// setup
+				initSelect("#sregion");
+				initSelect("#scountry");
+				$("#scontinent").empty();
+				$("#scontinent").append($("<option/>").attr("disabled","disabled").attr("selected","selected").text("Select a continent"));
+
+				// data query
+				collection = $(geoXML).find("continent");
+				//alert(collection);
+				//debugger;
+				$(collection).each(function (idx,node) {
+					id   = $(node).attr("id");
+					name = $(node).children("name").text();
+					newoption = $("<option/>").attr("value",id).attr("id",id).text(name);
+					$("#scontinent").append(newoption);
+				}); 	
+			}
+			
+			function loadRegions() {
+				// setup
+				initSelect("#scountry");
+				$("#sregion").empty();
+				$("#sregion").append($("<option/>").attr("disabled","disabled").attr("selected","selected").text("Select a Region"));
+				// find which continent is selected
+				id_selected = $("#scontinent").find(":selected").attr("id");
+				// fiter by attribute
+				filterS ="[id='"+id_selected+"']";
+				// data query
+				collection = $(geoXML).find("continent").filter(filterS).find("region");
+				//alert(collection);
+				//debugger;
+				$(collection).each(function (idx,node) {
+					id   = $(node).attr("id");
+					name = $(node).children("name").text();
+					newoption = $("<option/>").attr("value",id).attr("id",id).text(name);
+					$("#sregion").append(newoption);
+				}); 	
+			}
+			
+		  function loadCountries() {
+				// setup
+				$("#scountry").empty();
+				$("#scountry").append($("<option/>").attr("disabled","disabled").attr("selected","selected").text("Select a Country"));
+				// find which region is selected
+				id_selected = $("#sregion").find(":selected").attr("id");
+				// fiter by attribute
+				filterS ="[id='"+id_selected+"']";
+				// data query
+				collection = $(geoXML).find("region").filter(filterS).find("country");
+				//alert(collection);
+				//debugger;
+				$(collection).each(function (idx,node) {
+					id   = $(node).attr("id");
+					name = $(node).children("name").text();
+					newoption = $("<option/>").attr("value",id).attr("id",id).text(name);
+					$("#scountry").append(newoption);
+				}); 	
+			}
+			
+		</script>
+		
+	</head>
+	<body>
+		<form id="f1" method="get" action="dump.php">
+			<fieldset>
+				<legend> Select your Country </legend>
+				<label for="scontinent">continent:</label>
+				<select id="scontinent" name="continent"></select>
+				<br/>
+				<label for="sregion">region:</label>
+				<select id="sregion" name="region"></select>
+				<br/>
+				<label for="scountry">country:</label>
+				<select id="scountry" name="country"></select>
+				<br/>
+			</fieldset>
+			
+		</form>
+	</body>
+
+</html>
